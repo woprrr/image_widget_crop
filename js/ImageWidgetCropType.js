@@ -281,7 +281,7 @@
    * The "cropmove" event handler for the Cropper plugin.
    */
   Drupal.ImageWidgetCropType.prototype.cropMove = function () {
-    this.updateSoftLimits();
+    this.built();
   };
 
   /**
