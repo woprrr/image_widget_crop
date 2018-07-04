@@ -205,7 +205,7 @@ class ImageCrop extends FormElement {
           $properties = [];
           $form_state_values = $form_state->getValue($element['#parents']);
           // Check if form state has values.
-          if ($form_state_values) {
+          if (self::hasCropValues($element, $type, $form_state)) {
             $form_state_properties = $form_state_values['crop_wrapper'][$type]['crop_container']['values'];
             // If crop is applied by the form state we keep it that way.
             if ($form_state_properties['crop_applied'] == '1') {
@@ -518,6 +518,25 @@ class ImageCrop extends FormElement {
       'width' => ['label' => t('Width'), 'value' => NULL],
       'height' => ['label' => t('Height'), 'value' => NULL],
     ];
+  }
+
+  /**
+   * Evaluate if element has crop values in form states.
+   *
+   * @param array $element
+   *   An associative array containing the properties and children of the
+   *   form actions container.
+   * @param string $type
+   *   Id of current crop type.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The current state of the form.
+   *
+   * @return bool
+   *   True if crop element have values or False if not.
+   */
+  public static function hasCropValues(array $element, $type, FormStateInterface $form_state) {
+    $form_state_values = $form_state->getValue($element['#parents']);
+    return !empty($form_state_values) && isset($form_state_values['crop_wrapper'][$type]);
   }
 
 }
