@@ -468,7 +468,6 @@
       this.options.autoCrop = true;
     }
 
-    this.options.data.rotate = 0;
     this.options.data.scaleX = 1;
     this.options.data.scaleY = 1;
 
