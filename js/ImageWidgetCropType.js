@@ -790,7 +790,7 @@
   Drupal.theme.verticalTab = function (settings) {
       var tab = {};
       this.isRequired = settings.details.data('drupalIwcRequired');
-      tab.item = $('<li class="vertical-tabs__menu-item" tabindex="-1"></li>').append(tab.link = $('<a href="#"></a>').append(tab.title = $('<strong class="vertical-tabs__menu-item-title"></strong>').text(settings.title)).append(tab.summary = $('<span class="vertical-tabs__menu-item-summary"></span>')));
+      tab.item = $('<li class="vertical-tabs__menu-item" tabindex="-1"></li>').append(tab.link = $('<a href="#"></a>').append(tab.title = $('<strong class="vertical-tabs__menu-item-title"></strong>').html(settings.title)).append(tab.summary = $('<span class="vertical-tabs__menu-item-summary"></span>')));
 
       // If those Crop type is required add attributes.
       if (this.isRequired) {
