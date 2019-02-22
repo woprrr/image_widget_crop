@@ -246,6 +246,41 @@
   };
 
   /**
+   * The "ready" event handler for the Cropper plugin.
+   */
+  Drupal.ImageWidgetCropType.prototype.cropperReady = function () {
+    // Set crop limits.
+    this.built();
+
+    // Restore saved crop box data.
+    if (this.getValue('applied')) {
+      // Convert data.
+      var canvasData = this.cropper.getCanvasData();
+      var cropBoxData = this.getValues(this.originalHeight / canvasData.height);
+      cropBoxData.left = cropBoxData.x + canvasData.left;
+      cropBoxData.top = cropBoxData.y + canvasData.top;
+
+      // TEMP Bind height and width to max to avoid cropper.js bug.
+      var containerData = this.cropper.getContainerData();
+      var limited = this.options.viewMode === 1 || this.options.viewMode === 2;
+      var maxCropBoxWidth = Math.min(containerData.width, limited ? canvasData.width : containerData.width);
+      var maxCropBoxHeight = Math.min(containerData.height, limited ? canvasData.height : containerData.height);
+      if (this.ratio) {
+        if (maxCropBoxHeight * this.ratio > maxCropBoxWidth) {
+          maxCropBoxHeight = maxCropBoxWidth / this.ratio;
+        } else {
+          maxCropBoxWidth = maxCropBoxHeight * this.ratio;
+        }
+      }
+      cropBoxData.width = Math.min(cropBoxData.width, maxCropBoxWidth);
+      cropBoxData.height = Math.min(cropBoxData.height, maxCropBoxHeight);
+
+      // Restore data.
+      this.cropper.setCropBoxData(cropBoxData);
+    }
+  }
+
+  /**
    * The "built" event handler for the Cropper plugin.
    */
   Drupal.ImageWidgetCropType.prototype.built = function () {
@@ -448,31 +483,14 @@
     var minDelta = (this.originalWidth / 200);
     this.options.minContainerHeight = this.originalHeight / minDelta;
 
-    // Only autoCrop if 'Show default crop' is checked.
-    this.options.autoCrop = this.showDefaultCrop;
+    // Only autoCrop if 'Show default crop' is checked or if there is a crop already set.
+    this.options.autoCrop = this.showDefaultCrop || !!this.getValue('applied');
 
     // Set aspect ratio.
     this.options.aspectRatio = this.ratio;
 
-    // Initialize data.
-    var values = this.getValues(this.naturalDelta);
-    this.options.data = this.options.data || {};
-    if (values.applied) {
-      // Remove the "applied" value as it has no meaning in Cropper.
-      delete values.applied;
-
-      // Merge in the values.
-      this.options.data = $.extend(true, this.options.data, values);
-
-      // Enforce autoCrop if there's currently a crop applied.
-      this.options.autoCrop = true;
-    }
-
-    this.options.data.scaleX = 1;
-    this.options.data.scaleY = 1;
-
     this.$image
-      .on('built.iwc.cropper', this.built.bind(this))
+      .on('ready.iwc.cropper', this.cropperReady.bind(this))
       .on('cropend.iwc.cropper', this.cropEnd.bind(this))
       .on('cropmove.iwc.cropper', this.cropMove.bind(this))
       .cropper(this.options);
@@ -659,6 +677,11 @@
     value = value ? parseFloat(value) : 0;
     if (delta && name !== 'applied') {
       value = Math.round(value * delta);
+
+      // Bind height and width to image size when below hard limit. Solves floating-point bug.
+      if (value < this.hardLimit[name]) {
+        value = name === 'width' ? this.originalWidth : name === 'height' ? this.originalHeight : null;
+      }
     }
     this.values[name][0].value = value;
     this.values[name].trigger('change.iwc, input.iwc');
