@@ -48,9 +48,11 @@ class ImageCrop extends FormElement {
    */
   public static function valueCallback(&$element, $input, FormStateInterface $form_state) {
     $return = [];
+
     if ($input) {
       return $input;
     }
+
     return $return;
   }
 
@@ -487,7 +489,11 @@ class ImageCrop extends FormElement {
    *   True if triggered button are 'file_managed_file_submit' or False.
    */
   public static function fileTriggered(FormStateInterface $form_state) {
-    return !in_array('file_managed_file_submit', $form_state->getTriggeringElement()['#submit']);
+    if (isset($form_state->getTriggeringElement()['#submit'])) {
+      return !in_array('file_managed_file_submit', $form_state->getTriggeringElement()['#submit']);
+    }
+
+    return FALSE;
   }
 
   /**
