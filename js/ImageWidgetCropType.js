@@ -384,7 +384,7 @@
     if (this.values[name] && this.values[name][0]) {
       value = parseInt(this.values[name][0].value, 10) || 0;
     }
-    return name !== 'applied' && value && delta ? Math.round(value / delta) : value;
+    return name !== 'applied' && value && delta ? Math.floor(value / delta) : value;
   };
 
   /**
@@ -676,16 +676,57 @@
     }
     value = value ? parseFloat(value) : 0;
     if (delta && name !== 'applied') {
-      value = Math.round(value * delta);
+      value = Math.floor(value * delta);
 
       // Bind height and width to image size when below hard limit. Solves floating-point bug.
       if (value < this.hardLimit[name]) {
         value = name === 'width' ? this.originalWidth : name === 'height' ? this.originalHeight : null;
       }
     }
+
+    value = this.sanitizeSizes(name, value);
+
     this.values[name][0].value = value;
     this.values[name].trigger('change.iwc, input.iwc');
   };
+
+    /**
+     * Validate and sanitize with or height sizes to avoid overflow.
+     *
+     * @param {'applied'|'height'|'width'|'x'|'y'} name
+     *   The name of the crop value to set.
+     * @param {Number} value
+     *   The value to set.
+     */
+    Drupal.ImageWidgetCropType.prototype.sanitizeSizes = function (name, value) {
+        if (name === "width" || name === "height") {
+            return this.recalculateOverflowSizes(name, value);
+        }
+
+        return value;
+    };
+
+    /**
+     * Recalculate with or height sizes to avoid overflow for width or height.
+     *
+     * @param {'height'|'width'} name
+     *   The name of the crop value to set.
+     * @param {Number} value
+     *   The value to set.
+     */
+    Drupal.ImageWidgetCropType.prototype.recalculateOverflowSizes = function (name, value) {
+        var originalValue = 'original' + name.capitalize();
+        if (value > this[originalValue]) {
+            value--;
+            return value;
+        }
+
+        return value;
+    };
+
+    String.prototype.capitalize = function() {
+      return this.charAt(0).toUpperCase() + this.slice(1);
+    };
 
   /**
    * Sets multiple crop values.
